@@ -1,3 +1,5 @@
+import os
+
 import flet
 from flet import (
     alignment, 
@@ -14,6 +16,10 @@ from flet import (
     TextField
 )
 
+import fs.utils as futil
+
+TEST_FILE = os.path.join(os.getcwd(), 'data', 'test.json')
+INTRO_TEXT = f'Write a key and value to write to {TEST_FILE}'
 
 class MainApp:
     def __init__(self):
@@ -21,12 +27,35 @@ class MainApp:
 
     def render_page(self, page: Page):
         self._main_page = page
+        self._key = TextField(label='Enter a key')
+        self._value = TextField(label='Enter a value')
+        self._feedback = TextField(label="Your name is Dan")
+        self._display_json = TextField(label="", max_lines=50)
 
         self._main_page.add(
             Row(controls=[
-                TextField(label="Your name"),
+                Text(INTRO_TEXT, size=20, color="pink600", italic=True)
+            ])
+        )
+        self._main_page.add(
+            Row(controls=[
+                self._key,
+                self._value
+            ])
+        )
+        self._main_page.add(
+            Row(controls=[
+                self._feedback
+            ])
+        )
+        self._main_page.add(
+            Row(controls=[self._display_json])
+        )
+        self._main_page.add(
+            Row(controls=[
                 ElevatedButton(text="Render List", on_click=self.render_list_view),
-                ElevatedButton(text="Render Grid", on_click=self.render_grid_view)
+                ElevatedButton(text="Render Grid", on_click=self.render_grid_view),
+                ElevatedButton(text="Write Name File", on_click=self.write_name_to_file)
             ])
         )
 
@@ -56,8 +85,22 @@ class MainApp:
             )
         self._main_page.update()
 
+    def write_name_to_file(self, e):
+        file = futil.LocalJsonFile(TEST_FILE)
+        key = self._key.value
+        value = self._value.value
+        content_written = f'{key}: {value}'
+        file.write(key, value)
+        self._display_json.value = file.pretty_content
+        self._display_feedback_message(content_written)
+
+    def _display_feedback_message(self, message):
+        self._feedback.value = message
+        self._main_page.update()
+
 def main(page: Page):
     app = MainApp()
     app.render_page(page)
 
-flet.app(target=main, view=flet.WEB_BROWSER)
+# flet.app(target=main, view=flet.WEB_BROWSER)
+flet.app(target=main)
